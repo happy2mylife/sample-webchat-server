@@ -24,43 +24,42 @@ wss.on("connection", (ws) => {
   }, 1000);
 
   // ip address を idとして扱う
-  server.clientId =
-    server._socket.remoteAddress.replace(/^.*:/g, "") + uuid.v4();
+  ws.clientId = ws._socket.remoteAddress.replace(/^.*:/g, "") + uuid.v4();
   clientConnections.push(ws);
   console.log(`client connection count: ${clientConnections.length}`);
 
-  server.on("message", (message) => {
+  ws.on("message", (message) => {
     const json = JSON.parse(message);
     if (json.type == MessageType.JoinRoom) {
-      const room = getRoomByClientId(server.clientId);
+      const room = getRoomByClientId(ws.clientId);
       if (room && room.roomName === json.roomName) {
         console.log(`${json.name} is already joined Room 【${json.roomName}】`);
         return;
       }
       // 当該クライアントをルームから削除
-      leaveRoom(server.clientId);
-      joinRoom(server.clientId, json);
+      leaveRoom(ws.clientId);
+      joinRoom(ws.clientId, json);
       sendMessageToClients(message);
     } else if (json.type == MessageType.SendMessage) {
-      sendMessageToClientsInRoom(server.clientId, message);
+      sendMessageToClientsInRoom(ws.clientId, message);
       console.log(`message from ${json.name} to Room 【${json.roomName}】`);
     } else if (json.type == MessageType.ListMember) {
       json.members = getMembers(json.roomName);
-      sendMessageToClients(JSON.stringify(json), server.clientId);
+      sendMessageToClients(JSON.stringify(json), ws.clientId);
     } else if (json.type == MessageType.SendImage) {
-      sendMessageToClientsInRoom(server.clientId, message);
+      sendMessageToClientsInRoom(ws.clientId, message);
       console.log(`image from ${json.name} to Room 【${json.roomName}】`);
     } else if (json.type == MessageType.SendURL) {
-      sendMessageToClientsInRoom(server.clientId, message);
+      sendMessageToClientsInRoom(ws.clientId, message);
     }
   });
 
-  server.on("close", () => {
+  ws.on("close", () => {
     clearInterval(id);
     // 当該クライアントをルームから削除
-    leaveRoom(server.clientId);
-    removeFromConnections(server.clientId);
-    console.log(`${server.clientId} connection is closed.`);
+    leaveRoom(ws.clientId);
+    removeFromConnections(ws.clientId);
+    console.log(`${ws.clientId} connection is closed.`);
   });
 
   // ルーム情報をクライアントに通知
@@ -72,7 +71,7 @@ wss.on("connection", (ws) => {
   setTimeout(() => {
     // クライアントが受信できる状態に確実になってから送信
     // TODO 3秒は適当
-    server.send(message);
+    ws.send(message);
   }, 3000);
 });
 
