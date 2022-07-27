@@ -21,7 +21,7 @@ wss.on("connection", (ws) => {
   // heroku タイムアウト対策
   const id = setInterval(function () {
     ws.send(JSON.stringify(new Date()), function () {});
-  }, 1000);
+  }, 40000);
 
   // ip address を idとして扱う
   ws.clientId = ws._socket.remoteAddress.replace(/^.*:/g, "") + uuid.v4();
